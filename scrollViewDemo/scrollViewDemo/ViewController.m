@@ -26,7 +26,6 @@
 @property (nonatomic) NSInteger currentIndex;
 
 @property (strong, nonatomic) BaseViewController *baseVc;
-//@property (strong, nonatomic) UIView *cContentView;
 
 @end
 
@@ -63,12 +62,13 @@
         [btn addTarget:self action:@selector(btnClick:) forControlEvents:UIControlEventTouchUpInside];
         [self.smallScrollView addSubview:btn];
     }
+    [self addChildViewControllers];
     self.currentIndex = 0;
     self.tipView = [[UIView alloc] initWithFrame:CGRectMake(0, self.smallScrollView.frame.size.height - 3, btnW, 3)];
     self.tipView.backgroundColor = [UIColor redColor];
     [self.smallScrollView addSubview:self.tipView];
     
-    [self addChildViewControllers];
+    
 }
 
 
@@ -79,12 +79,13 @@
         BaseViewController *vc = [BaseViewController new];
         
         [self addChildViewController:vc];
-        
-        
-        [self.bigScrollView addSubview:vc.view];
-        vc.view.frame = CGRectMake(i * kUIScreenWidth, 0, kUIScreenWidth, self.bigScrollView.frame.size.height);
-        
     }
+    
+    // 添加默认控制器
+    UIViewController *vc = [self.childViewControllers firstObject];
+    vc.view.frame = self.bigScrollView.bounds;
+    [self.bigScrollView addSubview:vc.view];
+
 }
 
 - (void)enableScrollSwitch
@@ -136,6 +137,7 @@
     }
     
     CGPoint offset = CGPointMake(offsetX, 0);
+    
     [self.smallScrollView setContentOffset:offset animated:YES];
     
 }
@@ -154,11 +156,21 @@
     
 }
 
+
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView{
     if (scrollView == self.bigScrollView) {
         int index = fabs(scrollView.contentOffset.x) / scrollView.frame.size.width;
         
         self.currentIndex = index;
+        
+        BaseViewController *vc = self.childViewControllers[index];
+        
+        if (vc.view.superview) return;
+        
+        vc.view.frame = self.bigScrollView.bounds;
+        
+        [self.bigScrollView addSubview:vc.view];
+
     }
     
     
@@ -167,18 +179,7 @@
 - (void) scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
 {
     if (!decelerate) {
-        if (scrollView == self.bigScrollView) {
-            int index = fabs(scrollView.contentOffset.x) / scrollView.frame.size.width;
-            
-            self.currentIndex = index;
-        }
-    }
+        [self scrollViewDidEndDecelerating:scrollView];
+   }
 }
-
-
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
-}
-
 @end
